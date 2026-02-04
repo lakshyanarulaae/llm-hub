@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 4%; /* Zinc 950/Black */
+  --foreground: 0 0% 98%;
+}
+
+body {
+  @apply bg-black text-zinc-200 antialiased selection:bg-indigo-500/30;
+  /* Subtle mesh grid background */
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+  background-attachment: fixed;
+}
+
+/* Custom Scrollbar - Slim & Sleek */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-zinc-800 rounded-full border-[1px] border-black;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-zinc-600;
+}
+
+/* Markdown Styling Enhancements */
+.prose {
+  @apply text-zinc-300 leading-relaxed;
+}
+.prose strong {
+  @apply text-zinc-100 font-semibold;
+}
+.prose h1, .prose h2, .prose h3 {
+  @apply text-zinc-50 font-medium tracking-tight mt-6 mb-3;
+}
+.prose ul {
+  @apply my-4;
+}
+.prose li {
+  @apply my-1;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

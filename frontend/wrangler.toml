@@ -1,0 +1,8 @@
+name = "llm-hub"
+compatibility_date = "2026-02-04"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "llm-hub-db"
+database_id = "fcca5732-3245-4808-88a7-c6f4e264e191"
+migrations_dir = "migrations"

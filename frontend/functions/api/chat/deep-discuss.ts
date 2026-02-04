@@ -94,16 +94,40 @@ async function callGemini(env: Env, modelId: string, messages: Array<{ role: str
     ? parts.map((p: any) => p?.text ?? "").join("")
     : (json?.candidates?.[0]?.content?.text ?? "");
 
-  const finalText = String(extracted || "").trim();
-  if (!finalText) {
-  // include a snippet so we can see what Gemini returned
-  throw new Error(
-    "Gemini empty content. Raw: " + JSON.stringify(json).slice(0, 500)
-  );
+  let finalText = String(extracted || "").trim();
+
+if (!finalText) {
+  // ✅ Retry once with minimal context (only the last user message)
+  const lastUser = [...messages].reverse().find(m => m.role !== "assistant")?.content ?? "";
+
+  const payload2 = {
+    contents: [{ role: "user", parts: [{ text: lastUser }] }],
+    generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
+  };
+
+  const r2 = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload2)
+  });
+
+  const t2 = await r2.text();
+  if (!r2.ok) throw new Error(`Gemini retry error ${r2.status}: ${t2.slice(0, 400)}`);
+
+  const j2 = JSON.parse(t2);
+  const parts2 = j2?.candidates?.[0]?.content?.parts;
+  const extracted2 = Array.isArray(parts2)
+    ? parts2.map((p: any) => p?.text ?? "").join("")
+    : "";
+
+  finalText = String(extracted2 || "").trim();
+
+  if (!finalText) throw new Error("Gemini returned empty content.");
+  return { content: finalText, full_json: j2 };
 }
 
+return { content: finalText, full_json: json };
 
-  return { content: finalText, full_json: json };
 }
 
 async function callModel(env: Env, modelId: string, messages: Array<{ role: string; content: string }>) {

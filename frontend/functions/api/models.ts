@@ -7,7 +7,7 @@ export const onRequestGet: PagesFunction = async () => {
     "claude-sonnet-4.5": { provider: "claude", api_name: "claude-sonnet-4-5-20250929", display_name: "Claude Sonnet 4.5" }
   };
 
-  // Convert object -> array with `id` field (what your frontend expects)
+  // ✅ Convert object -> array with an `id` field (what your frontend expects)
   const models = Object.entries(MODELS).map(([id, cfg]) => ({ id, ...cfg }));
 
   return Response.json({ models });

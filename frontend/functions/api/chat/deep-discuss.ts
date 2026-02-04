@@ -235,6 +235,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
             send({ type: "status", msg: "Converged early. Stopping." });
             break;
         }
+        }
 
         send({ type: "status", msg: "Completed." });
         controller.close();

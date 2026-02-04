@@ -61,17 +61,22 @@ async function callGemini(env: Env, modelId: string, messages: Array<{ role: str
   const meta = MODEL_META[modelId];
   const modelApi = meta?.api ?? modelId;
 
-  // Convert chat-style messages to Gemini "contents"
   const contents = messages.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
     parts: [{ text: m.content }]
   }));
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelApi)}:generateContent?key=${encodeURIComponent(
-    key
-  )}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+    modelApi
+  )}:generateContent?key=${encodeURIComponent(key)}`;
 
-  const payload = { contents };
+  const payload = {
+    contents,
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 1024
+    }
+  };
 
   const r = await fetch(url, {
     method: "POST",
@@ -83,11 +88,20 @@ async function callGemini(env: Env, modelId: string, messages: Array<{ role: str
   if (!r.ok) throw new Error(`Gemini error ${r.status}: ${text.slice(0, 400)}`);
 
   const json = JSON.parse(text);
-  const content =
-    json?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text ?? "").join("") ?? "";
 
-  return { content: String(content || ""), full_json: json };
+  const parts = json?.candidates?.[0]?.content?.parts;
+  const extracted = Array.isArray(parts)
+    ? parts.map((p: any) => p?.text ?? "").join("")
+    : (json?.candidates?.[0]?.content?.text ?? "");
+
+  const finalText = String(extracted || "").trim();
+  if (!finalText) {
+    throw new Error("Gemini returned empty content (check GOOGLE_API_KEY and model access).");
+  }
+
+  return { content: finalText, full_json: json };
 }
+
 
 async function callModel(env: Env, modelId: string, messages: Array<{ role: string; content: string }>) {
   const meta = MODEL_META[modelId];
@@ -146,7 +160,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
               content: a.content,
               full_json: a.full_json,
               exchange: round,
-              type: "response"
+              type: "critique"
             }
           });
 
@@ -164,7 +178,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
               content: b.content,
               full_json: b.full_json,
               exchange: round,
-              type: "response"
+              type: "critiqu"
             }
           });
         }

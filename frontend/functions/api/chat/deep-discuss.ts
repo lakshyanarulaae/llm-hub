@@ -140,6 +140,24 @@ async function callModel(env: Env, modelId: string, messages: Array<{ role: stri
   throw new Error(`Unsupported provider for model: ${modelId}`);
 }
 
+function looksConverged(text: string) {
+  const t = (text || "").toLowerCase();
+
+  // Strong stop signals
+  if (t.includes("converged") || t.includes("no further") || t.includes("no major") || t.includes("no significant")) return true;
+
+  // If critique is very short, it's usually minor
+  const wordCount = t.split(/\s+/).filter(Boolean).length;
+  if (wordCount <= 30) return true;
+
+  // If it explicitly says "correct" + "minor" etc.
+  if ((t.includes("correct") || t.includes("accurate")) && (t.includes("minor") || t.includes("small") || t.includes("nit") || t.includes("optional"))) {
+    return true;
+  }
+
+  return false;
+}
+
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const body = (await request.json()) as DeepDiscussBody;
 
@@ -193,7 +211,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
           // B speaks
           send({ type: "status", msg: `Round ${round}/${maxRounds}: ${MODEL_META[modelB].name} is responding...` });
-          const b = await callModel(env, modelB, transcript);
+          const judgeMessages: Array<{ role: string; content: string }> = [
+            { role: "system", content: "You are a strict reviewer. If the answer is essentially correct and only minor optional details remain, respond with 'CONVERGED' and then a 1–2 sentence note. If there are material errors/omissions, list them clearly and suggest the corrected final answer." },
+            { role: "user", content: `Question: ${prompt}\n\nAnswer from Model A:\n${a.content}\n\nReview:` }
+            ];
+
+          const b = await callModel(env, modelB, judgeMessages);
           transcript.push({ role: "assistant", content: b.content });
 
           send({
@@ -208,6 +231,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
               type: "critique"
             }
           });
+          if (looksConverged(b.content)) {
+            send({ type: "status", msg: "Converged early. Stopping." });
+            break;
         }
 
         send({ type: "status", msg: "Completed." });

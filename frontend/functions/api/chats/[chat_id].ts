@@ -11,7 +11,17 @@ export const onRequestGet: PagesFunction = async ({ env, params }) => {
     "SELECT id, chat_id, role, content, model, round, metadata, created_at FROM messages WHERE chat_id = ? ORDER BY id ASC"
   ).bind(chatId).all();
 
-  return Response.json({ chat, messages });
+  // ✅ Frontend expects: { id, system_prompt, messages }
+  return Response.json({
+    id: chat.id,
+    title: chat.title,
+    mode: chat.mode,
+    system_prompt: chat.system_prompt,
+    messages: (messages || []).map((m: any) => ({
+      ...m,
+      metadata: m.metadata ? JSON.parse(m.metadata) : null
+    }))
+  });
 };
 
 export const onRequestDelete: PagesFunction = async ({ env, params }) => {

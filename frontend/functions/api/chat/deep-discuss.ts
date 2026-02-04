@@ -96,8 +96,12 @@ async function callGemini(env: Env, modelId: string, messages: Array<{ role: str
 
   const finalText = String(extracted || "").trim();
   if (!finalText) {
-    throw new Error("Gemini returned empty content (check GOOGLE_API_KEY and model access).");
-  }
+  // include a snippet so we can see what Gemini returned
+  throw new Error(
+    "Gemini empty content. Raw: " + JSON.stringify(json).slice(0, 500)
+  );
+}
+
 
   return { content: finalText, full_json: json };
 }

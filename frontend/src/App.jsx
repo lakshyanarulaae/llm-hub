@@ -410,6 +410,12 @@ const MessageBubble = ({ msg }) => {
   const { role, content, full_json, exchange, modelName } = msg;
   const isUser = role === 'user';
   const isFinal = modelName === 'System Consensus';
+  const hasCritiqueShape =
+  full_json &&
+  (full_json.critique ||
+    full_json.better_solution ||
+    (Array.isArray(full_json.positive_points) && full_json.positive_points.length) ||
+    (Array.isArray(full_json.negative_points) && full_json.negative_points.length));
 
   if (isUser) return (
     <div className="flex justify-end mb-10 animate-fade-in">
@@ -435,7 +441,7 @@ const MessageBubble = ({ msg }) => {
         </div>
 
         <div className="p-6">
-          {full_json ? (
+          {hasCritiqueShape ? (
             <div className="space-y-8">
                {/* Critique */}
                {full_json.critique && (

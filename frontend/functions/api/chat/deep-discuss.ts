@@ -102,7 +102,6 @@ async function callGemini(env: Env, modelId: string, messages: Array<{ role: str
   return { content: finalText, full_json: json };
 }
 
-
 async function callModel(env: Env, modelId: string, messages: Array<{ role: string; content: string }>) {
   const meta = MODEL_META[modelId];
   if (!meta) throw new Error(`Unknown model: ${modelId}`);
@@ -178,7 +177,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
               content: b.content,
               full_json: b.full_json,
               exchange: round,
-              type: "critiqu"
+              type: "critique"
             }
           });
         }
